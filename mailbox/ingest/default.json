@@ -1,0 +1,41 @@
+{
+  "description": "Pipeline for parsing Zimbra mailbox logs. Requires the geoip and user_agent plugins.",
+  "processors": [{
+    "grok": {
+      "field": "message",
+      "pattern_definitions": {
+            "ZMQTP": "\\[qtp%{NUMBER:zimbra.mailbox.qtp_process}-%{DATA:qtp_thread}:%{DATA:qtp_info}\\]",
+            "ZMLOGLEVEL": "%{WORD:zimbra.mailbox.level}",
+            "ZMPROCESS": "%{DATA:message}",
+            "ZMTHREAD": "%{NONNEGINT:thread}",
+            "ZMUSERAGENT": "%{DATA:user_agent}((/| - )%{DATA:user_agent_ver})?",
+            "ZMPROGRAM": "\\[%{ZMPROCESS}(-%{ZMTHREAD})?(:%{DATA:program_info})?\\]",
+            "ZMCLIENT": "\\[(name=(%{EMAILADDRESS:emailaddress}|%{USERNAME:username});)?(aname=%{EMAILADDRESS:delegated_emailaddress};)?(mid=%{NUMBER:mid};)?(o?ip=%{IPORHOST:src_ip};)?(o?port=%{IPORHOST:src_port};)?(o?proto=%{WORD:protocol};)?(DeviceID=%{DATA:device};)?(via=%{DATA:via};)?(ua=%{ZMUSERAGENT};)?(ds=%{DATA:ds};)?\\]",
+            "ZMCOMMAND": "cmd=%{WORD:command}",
+            "ZMCOMMAND_PARAMS": "(%{WORD:username_type}=%{DATA:username}(; protocol=%{WORD:protocol})?(; error=%{DATA:error})?(; feature=%{WORD:feature})?(; member=%{DATA:member})?(; status=%{WORD:status})?;)?",
+            "ZMAUDIT": "%{TIMESTAMP_ISO8601:@timestamp} %{ZMLOGLEVEL}  %{ZMPROGRAM} %{ZMCLIENT} security - %{ZMCOMMAND};( %{ZMCOMMAND_PARAMS})?",
+            "ELAPSED": "elapsed=%{NUMBER:elapsed}",
+            "MAILBOX_COMMAND": "(\\(batch\\) )?%{WORD:command}( %{WORD:item_type}(:)? )?",
+            "COMMAND_EXTRA": "( %{GREEDYDATA:command_params})? (%{NUMBER:elapsed}ms)?",
+            "ADDING_MESSAGE_OP": "id=%{NUMBER:item_id},)? (Message-ID=<%{DATA:messageid}>,)? (parentId=%{NUMBER:parent_id},)? (folderId=%{NUMBER:folder_id},)? (folderName=%{DATA:folder_name}$",
+            "MOVING_MESSAGE_OP": "\\(id=%{NUMBER:item_id}\\) to Folder %{DATA:folder_name} \\(id=%{NUMBER:folder_id}\\)",
+            "DELETING_MESSAGE_OP": "(\\(id=%{NUMBER:item_id}\\))?\\.$"
+        },
+      "patterns": [
+        "%{TIMESTAMP_ISO8601:@timestamp} %{ZMLOGLEVEL} ( )?(%{ZMQTP}|%{ZMPROGRAM}) %{ZMCLIENT} %{DATA:protocol} - %{MAILBOX_COMMAND}((%{ADDING_MESSAGE_OP})?(%{MOVING_MESSAGE_OP})?(%{DELETING_MESSAGE_OP})?)?( elapsed=%{NUMBER:elapsed})?"
+      ],
+      "ignore_missing": false
+    }
+  }, {
+    "geoip": {
+      "field": "clientip",
+      "target_field": "geoip"
+    }
+  }],
+  "on_failure" : [{
+    "set" : {
+      "field" : "error",
+      "value" : "{{ _ingest.on_failure_message }}"
+    }
+  }]
+}
