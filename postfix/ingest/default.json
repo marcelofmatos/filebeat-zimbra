@@ -145,18 +145,29 @@
 		"remove": {
 			"field": "message"
 		}
-  }, {
-    "date": {
-      "field": "timestamp",
-      "target_field": "@timestamp",
-      "formats": [
-        "EEE dd HH:mm:ss",
-        "EEE d HH:mm:ss",
-        "ISO8601"
-      ],
-      "ignore_failure": true
-    }
-	}, {}],
+	}, {
+		"remove": {
+			"field": "timestamp"
+		}
+    }, {
+		"date": {
+		  "field": "timestamp",
+		  "target_field": "@timestamp",
+		  "formats": [
+			"MMM dd HH:mm:ss",
+			"MMM d HH:mm:ss",
+			"ISO8601"
+		  ],
+		  "ignore_failure": true
+		}
+
+	}, {
+		"geoip": {
+		  "field": "postfix_client_ip",
+		  "target_field": "geoip",
+		  "ignore_failure": true
+		}
+    }],
 	"on_failure": [{
 		"set": {
 			"field": "error",
