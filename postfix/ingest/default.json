@@ -137,7 +137,7 @@
 				"%{POSTFIX_DATE:timestamp} %{POSTFIX_PREFIX} %{POSTFIX_TLSMGR}",
 				"%{POSTFIX_DATE:timestamp} %{POSTFIX_PREFIX} %{POSTFIX_LOCAL}",
 				"%{POSTFIX_DATE:timestamp} %{POSTFIX_PREFIX} %{POSTFIX_ERROR}",
-				"%{POSTFIX_DATE:timestamp} %{POSTFIX_PREFIX} %{POSTFIX_POSTSUPER}",
+				"%{POSTFIX_DATE:timestamp} %{POSTFIX_PREFIX} %{POSTFIX_POSTSUPER}"
 			],
 			"ignore_missing": true
 		}
